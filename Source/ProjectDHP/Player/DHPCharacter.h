@@ -48,7 +48,13 @@ public:
 	USaveLoadComponent* SaveLoadComponent;
 	bool bPressedRun = false;
 	bool bPressedCrouch = false;
+   	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    	class UPhysicsHandleComponent* PhysicsHandle;
 
+    	void PickupObject();
+    	void ThrowObject();
+
+    	AActor* HeldObject;
 protected:
 	virtual void BeginPlay() override;
 
@@ -70,8 +76,6 @@ public:
 	//View
 	virtual void Yaw(float amount);
 	virtual void Pitch(float amount);
-
-
 
 };
 

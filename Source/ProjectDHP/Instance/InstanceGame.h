@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -16,6 +15,12 @@ class PROJECTDHP_API UInstanceGame : public UGameInstance
 	
 public:
 	TMap<int, FString> ToolTip;
+	
 public: 
-	bool ReedToolTipJson(int LocationKey);
+	// Функция для чтения JSON-файла и загрузки данных в карту ToolTip
+	bool ReadToolTipJson(int LocationKey);
+
+private:
+	// Вспомогательная функция для загрузки данных из JSON-файла
+	bool LoadJsonData(const FString& FileName);
 };

@@ -16,7 +16,8 @@ ADHPCharacter::ADHPCharacter()
 	SaveLoadComponent->playerLastLocation = GetActorLocation();
 
 	movementComponent->bRequestedMoveUseAcceleration = true;
-	
+	PhysicsHandle = CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("PhysicsHandle"));
+
 }
 
 void ADHPCharacter::BeginPlay()
@@ -30,6 +31,11 @@ void ADHPCharacter::BeginPlay()
 void ADHPCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);	
+    	if (HeldObject)
+    	{
+     		FVector HoldLocation = GetActorLocation() + GetActorForwardVector() * 200.0f;
+     	 	PhysicsHandle->SetTargetLocation(HoldLocation);
+   	}
 }
 
 void ADHPCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -51,7 +57,9 @@ void ADHPCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ADHPCharacter::StartCrouch);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ADHPCharacter::StopCrouch);
 
-	
+	PlayerInputComponent->BindAction("Pickup", IE_Pressed, this, &ADHPCharacter::PickupObject);
+    	PlayerInputComponent->BindAction("Throw", IE_Pressed, this, &ADHPCharacter::ThrowObject);
+
 }
 
 void ADHPCharacter::MoveForward(float amount) {
@@ -108,5 +116,38 @@ void ADHPCharacter::StopCrouch() {
 
 }
 
+void ADHPCharacter::PickupObject()
+{
+    if (HeldObject) return;
+
+    FVector Start = GetActorLocation();
+    FVector End = Start + GetActorForwardVector() * 200.0f;
+
+    FHitResult HitResult;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(this);
+
+    bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+    if (bHit && HitResult.GetActor()->IsA(APickupObject::StaticClass()))
+    {
+        HeldObject = HitResult.GetActor();
+        PhysicsHandle->GrabComponentAtLocation(HeldObject->FindComponentByClass<UStaticMeshComponent>(), NAME_None, HeldObject->GetActorLocation());
+    }
+}
+
+void ADHPCharacter::ThrowObject()
+{
+    if (HeldObject)
+    {
+        UStaticMeshComponent* MeshComponent = HeldObject->FindComponentByClass<UStaticMeshComponent>();
+        if (MeshComponent)
+        {
+            PhysicsHandle->ReleaseComponent();
+            FVector ThrowDirection = GetActorForwardVector();
+            MeshComponent->AddImpulse(ThrowDirection * 1000.0f);
+            HeldObject = nullptr;
+        }
+    }
+}
 
 
